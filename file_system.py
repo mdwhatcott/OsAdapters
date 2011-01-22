@@ -11,13 +11,11 @@ class FileSystem(object):
         os.chdir(location)
 
     @contextlib.contextmanager
-    def working_directory(self, location):
+    def working_location(self, location):
         initial = self.getcwd()
         try:
             self.chdir(location)
             yield
-        except Exception:
-            raise
         finally:
             self.chdir(initial)
 

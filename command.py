@@ -39,15 +39,21 @@ class Command(object):
         if self._no_op:
             return self._no_op_report()
 
+        if self._verbose:
+            print self._command
+
         with self._working_context(self._working_location):
             return subprocess.check_output(self._command, shell=True)
 
-    def run_async(self):
+    def run_async(self, *popenargs, **kwargs):
         if self._no_op:
             return self._no_op_report()
 
+        if self._verbose:
+            print self._command
+
         with self._working_context(self._working_location):
-            return subprocess.Popen(self._command)
+            return subprocess.Popen(self._command, *popenargs, **kwargs)
 
     def _no_op_report(self):
         print Command.NO_OP.format(self._working_location, _SPACE.join(self._command))

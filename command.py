@@ -8,12 +8,14 @@ _BLANK = str()
 
 class Command(object):
     NO_OP = '(...no op...)\n{0}>{1}'
+    STDOUT_ARG = 'stdout'
 
     def __init__(self, text=None):
         self._command = [text] if text is not None else []
         self._working_location = os.getcwd() 
         self._no_op = False
         self._verbose = False
+        self._blank_out = BlankOut()
 
     def no_op(self): 
         self._no_op = True
@@ -52,6 +54,9 @@ class Command(object):
         if self._verbose:
             print self._command
 
+        if Command.STDOUT_ARG not in kwargs:
+            kwargs[Command.STDOUT_ARG] = self._blank_out
+
         with self._working_context(self._working_location):
             return subprocess.Popen(self._command, *popenargs, **kwargs)
 
@@ -67,3 +72,8 @@ class Command(object):
             yield
         finally:
             os.chdir(initial)
+
+
+class BlankOut(object):
+    def write(self, output): pass
+    def fileno(self): return int()

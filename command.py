@@ -1,7 +1,17 @@
 import os
 import string
 import contextlib
-import subprocess
+from subprocess import Popen, PIPE
+check_output = None
+
+def replace_check_output(command_args, **kwargs):
+    kwargs['stdout'] = PIPE
+    return Popen(' '.join(command_args), **kwargs).stdout.read()
+
+try:
+    from subprocess import check_output
+except ImportError:
+    check_output = replace_check_output
 
 _SPACE = string.whitespace[-1]
 _BLANK = str()
@@ -45,7 +55,7 @@ class Command(object):
             print self._command
 
         with self._working_context(self._working_location):
-            return subprocess.check_output(self._command, shell=True)
+            return check_output(self._command, shell=True)
 
     def run_async(self, *popenargs, **kwargs):
         if self._no_op:
@@ -58,7 +68,7 @@ class Command(object):
             kwargs[Command.STDOUT_ARG] = self._blank_out
 
         with self._working_context(self._working_location):
-            return subprocess.Popen(self._command, *popenargs, **kwargs)
+            return Popen(self._command, *popenargs, **kwargs)
 
     def _no_op_report(self):
         print Command.NO_OP.format(self._working_location, _SPACE.join(self._command))

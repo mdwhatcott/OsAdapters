@@ -1,4 +1,5 @@
 import os
+import sys
 import string
 import contextlib
 from subprocess import Popen, PIPE
@@ -18,14 +19,14 @@ _BLANK = str()
 
 class Command(object):
     NO_OP = '(...no op...)\n{0}>{1}'
-    STDOUT_ARG = 'stdout'
 
     def __init__(self, text=None):
         self._command = [text] if text is not None else []
         self._working_location = os.getcwd() 
         self._no_op = False
         self._verbose = False
-        self._blank_out = BlankOut()
+        self._async = False
+        self._output = None
 
     def no_op(self): 
         self._no_op = True
@@ -47,6 +48,11 @@ class Command(object):
         self._working_location = working_location
         return self
 
+    def async(self, output=sys.stdout):
+        self._async = True
+        self._output = output
+        return self
+
     def run(self):
         if self._no_op:
             return self._no_op_report()
@@ -55,20 +61,10 @@ class Command(object):
             print self._command
 
         with self._working_context(self._working_location):
+            if self._async:
+                return Popen(self._command, stdout=self._output, stderr=self._output)
+
             return check_output(self._command, shell=True)
-
-    def run_async(self, *popenargs, **kwargs):
-        if self._no_op:
-            return self._no_op_report()
-
-        if self._verbose:
-            print self._command
-
-        if Command.STDOUT_ARG not in kwargs:
-            kwargs[Command.STDOUT_ARG] = self._blank_out
-
-        with self._working_context(self._working_location):
-            return Popen(self._command, *popenargs, **kwargs)
 
     def _no_op_report(self):
         print Command.NO_OP.format(self._working_location, _SPACE.join(self._command))
@@ -82,8 +78,3 @@ class Command(object):
             yield
         finally:
             os.chdir(initial)
-
-
-class BlankOut(object):
-    def write(self, output): pass
-    def fileno(self): return int()

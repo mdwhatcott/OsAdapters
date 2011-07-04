@@ -9,5 +9,5 @@ setup(
     license='The MIT License (MIT)',
     description='Nice abstractions over the file system and running commands.',
     long_description=open('README').read(),
-    packages=['iterable'],
+    packages=['osadapt'],
 )
